@@ -1,0 +1,19 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Team {
+  id        String   @id @default(cuid())
+  teamName  String
+  domain    String
+  round1    Float    @default(0)
+  round2    Float    @default(0)
+  round3    Float    @default(0)
+  total     Float    @default(0)
+  createdAt DateTime @default(now())
+}
