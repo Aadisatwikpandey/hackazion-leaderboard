@@ -73,7 +73,6 @@ export default function TeamForm({ editingTeam, onSave, onCancelEdit }: Props) {
       if (editingTeam) {
         await updateDoc(doc(db, "teams", editingTeam.id), {
           teamName: form.teamName.trim(),
-          domain: form.domain,
           round1: r1,
           round2: r2,
           round3: r3,
@@ -123,20 +122,22 @@ export default function TeamForm({ editingTeam, onSave, onCancelEdit }: Props) {
             />
           </div>
 
-          <div>
-            <label className="mb-1 block text-sm text-gray-400">Domain</label>
-            <select
-              className={inputClass}
-              value={form.domain}
-              onChange={(e) => setForm({ ...form, domain: e.target.value })}
-            >
-              {DOMAINS.map((d) => (
-                <option key={d} value={d}>
-                  {d}
-                </option>
-              ))}
-            </select>
-          </div>
+          {!editingTeam && (
+            <div>
+              <label className="mb-1 block text-sm text-gray-400">Domain</label>
+              <select
+                className={inputClass}
+                value={form.domain}
+                onChange={(e) => setForm({ ...form, domain: e.target.value })}
+              >
+                {DOMAINS.map((d) => (
+                  <option key={d} value={d}>
+                    {d}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
         </div>
 
         <div className="grid grid-cols-3 gap-4">
