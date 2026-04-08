@@ -42,7 +42,7 @@ export default function AdminPage() {
   async function seedTeams() {
     setSeeding(true);
     setSeedMsg("");
-    const res = await fetch("/api/seed", { method: "POST" });
+    const res = await fetch("/api/seed", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ force: true }) });
     const data = await res.json();
     setSeeding(false);
     setSeedMsg(data.message || "Done");
