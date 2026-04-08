@@ -1,48 +1,78 @@
 "use client";
 
-import { useState } from "react";
-import { collection, query, where, getDocs, updateDoc } from "firebase/firestore";
+import { useState, useEffect, useRef } from "react";
+import { collection, query, where, getDocs, updateDoc, onSnapshot } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 
+type TeamOption = { id: string; teamName: string; domain: string; githubRepo?: string };
+
 export default function TeamSubmitForm() {
-  const [teamName, setTeamName] = useState("");
+  const [teams, setTeams] = useState<TeamOption[]>([]);
+  const [search, setSearch] = useState("");
+  const [selected, setSelected] = useState<TeamOption | null>(null);
+  const [showDropdown, setShowDropdown] = useState(false);
   const [repoUrl, setRepoUrl] = useState("");
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [message, setMessage] = useState("");
+  const wrapperRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const unsub = onSnapshot(collection(db, "teams"), (snap) => {
+      setTeams(snap.docs.map((d) => ({ id: d.id, ...d.data() } as TeamOption)));
+    });
+    return () => unsub();
+  }, []);
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (wrapperRef.current && !wrapperRef.current.contains(e.target as Node)) {
+        setShowDropdown(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, []);
+
+  const filtered = teams.filter((t) =>
+    t.teamName.toLowerCase().includes(search.toLowerCase())
+  );
+
+  function selectTeam(team: TeamOption) {
+    setSelected(team);
+    setSearch(team.teamName);
+    setShowDropdown(false);
+    if (team.githubRepo) setRepoUrl(`https://github.com/${team.githubRepo}`);
+    else setRepoUrl("");
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (!selected) { setStatus("error"); setMessage("Please select a team"); return; }
     setStatus("loading");
     setMessage("");
 
-    // Validate GitHub URL format
-    const match = repoUrl.match(/^https:\/\/github\.com\/([^/]+)\/([^/]+?)(\.git)?$/);
+    const match = repoUrl.match(/^https:\/\/github\.com\/([^/]+)\/([^/\s]+?)(\.git)?$/);
     if (!match) {
       setStatus("error");
-      setMessage("Invalid GitHub URL. Use format: https://github.com/owner/repo");
+      setMessage("Invalid GitHub URL. Use: https://github.com/owner/repo");
       return;
     }
 
     const githubRepo = `${match[1]}/${match[2]}`;
 
     try {
-      // Find team by name (case-insensitive match)
-      const q = query(collection(db, "teams"), where("teamName", "==", teamName.trim()));
+      const q = query(collection(db, "teams"), where("teamName", "==", selected.teamName));
       const snap = await getDocs(q);
-
-      if (snap.empty) {
-        setStatus("error");
-        setMessage("Team not found. Make sure the name matches exactly.");
-        return;
-      }
-
+      if (snap.empty) { setStatus("error"); setMessage("Team not found."); return; }
       await updateDoc(snap.docs[0].ref, { githubRepo });
       setStatus("success");
-      setMessage(`Repo linked for ${teamName}!`);
-      setTeamName("");
+      setMessage(`Repo linked for ${selected.teamName}!`);
+      setSearch("");
+      setSelected(null);
       setRepoUrl("");
-    } catch (e) {
-      console.error(e);
+      setTimeout(() => { setStatus("idle"); setMessage(""); }, 4000);
+    } catch {
       setStatus("error");
       setMessage("Something went wrong. Try again.");
     }
@@ -58,17 +88,36 @@ export default function TeamSubmitForm() {
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <div>
+          {/* Searchable team dropdown */}
+          <div ref={wrapperRef} className="relative">
             <label className="mb-1 block text-sm text-gray-400">Team Name</label>
             <input
               type="text"
               className={inputClass}
-              placeholder="Exact team name"
-              value={teamName}
-              onChange={(e) => setTeamName(e.target.value)}
-              required
+              placeholder="Search your team…"
+              value={search}
+              onChange={(e) => { setSearch(e.target.value); setSelected(null); setShowDropdown(true); }}
+              onFocus={() => setShowDropdown(true)}
+              autoComplete="off"
             />
+            {showDropdown && filtered.length > 0 && (
+              <ul className="absolute z-10 mt-1 max-h-52 w-full overflow-auto rounded-lg border border-gray-700 bg-gray-800 shadow-lg">
+                {filtered.map((t) => (
+                  <li
+                    key={t.id}
+                    className="flex cursor-pointer items-center justify-between px-3 py-2 hover:bg-gray-700"
+                    onMouseDown={() => selectTeam(t)}
+                  >
+                    <span className="text-sm text-white">{t.teamName}</span>
+                    <span className="ml-2 shrink-0 rounded-full bg-indigo-500/20 px-2 py-0.5 text-xs text-indigo-300">
+                      {t.domain}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
+
           <div>
             <label className="mb-1 block text-sm text-gray-400">GitHub Repo URL</label>
             <input

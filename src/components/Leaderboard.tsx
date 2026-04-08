@@ -5,6 +5,7 @@ import { Team } from "./TeamForm";
 type Props = {
   teams: Team[];
   onEdit: (team: Team) => void;
+  readOnly?: boolean;
 };
 
 function sortTeams(teams: Team[]) {
@@ -27,7 +28,7 @@ const rankBadges = ["🥇", "🥈", "🥉"];
 
 export { sortTeams };
 
-export default function Leaderboard({ teams, onEdit }: Props) {
+export default function Leaderboard({ teams, onEdit, readOnly = false }: Props) {
   const sorted = sortTeams(teams);
 
   return (
@@ -53,14 +54,14 @@ export default function Leaderboard({ teams, onEdit }: Props) {
               <th className="px-4 py-3 text-center">-Lines</th>
               <th className="px-4 py-3 text-center">Contributors</th>
               <th className="px-4 py-3 text-center">Last Commit</th>
-              <th className="px-4 py-3 w-16"></th>
+              {!readOnly && <th className="px-4 py-3 w-16"></th>}
             </tr>
           </thead>
           <tbody>
             {sorted.length === 0 && (
               <tr>
-                <td colSpan={13} className="px-4 py-8 text-center text-gray-500">
-                  No teams yet. Add one above.
+                <td colSpan={readOnly ? 12 : 13} className="px-4 py-8 text-center text-gray-500">
+                  No teams yet.
                 </td>
               </tr>
             )}
@@ -96,14 +97,16 @@ export default function Leaderboard({ teams, onEdit }: Props) {
                     ? new Date(team.lastCommitDate).toLocaleDateString("en-IN", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })
                     : "—"}
                 </td>
-                <td className="px-4 py-3 text-center">
-                  <button
-                    onClick={() => onEdit(team)}
-                    className="rounded px-2 py-1 text-xs text-gray-400 hover:bg-gray-700 hover:text-white"
-                  >
-                    Edit
-                  </button>
-                </td>
+                {!readOnly && (
+                  <td className="px-4 py-3 text-center">
+                    <button
+                      onClick={() => onEdit(team)}
+                      className="rounded px-2 py-1 text-xs text-gray-400 hover:bg-gray-700 hover:text-white"
+                    >
+                      Edit
+                    </button>
+                  </td>
+                )}
               </tr>
             ))}
           </tbody>
