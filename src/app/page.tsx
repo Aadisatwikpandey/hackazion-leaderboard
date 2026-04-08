@@ -51,11 +51,11 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Leaderboard — no edit button on public view */}
-        <Leaderboard teams={filtered} onEdit={() => {}} readOnly />
-
         {/* Top 3 per domain */}
         <TopDomains teams={teams} />
+
+        {/* Leaderboard — no edit button on public view */}
+        <Leaderboard teams={filtered} onEdit={() => {}} readOnly />
       </div>
     </main>
   );
