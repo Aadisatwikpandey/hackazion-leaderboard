@@ -109,35 +109,16 @@ export default function TeamForm({ editingTeam, onSave, onCancelEdit }: Props) {
       </h2>
 
       <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <div>
-            <label className="mb-1 block text-sm text-gray-400">Team Name</label>
-            <input
-              type="text"
-              className={inputClass}
-              placeholder="e.g. Team Alpha"
-              value={form.teamName}
-              onChange={(e) => setForm({ ...form, teamName: e.target.value })}
-              required
-            />
-          </div>
-
-          {!editingTeam && (
-            <div>
-              <label className="mb-1 block text-sm text-gray-400">Domain</label>
-              <select
-                className={inputClass}
-                value={form.domain}
-                onChange={(e) => setForm({ ...form, domain: e.target.value })}
-              >
-                {DOMAINS.map((d) => (
-                  <option key={d} value={d}>
-                    {d}
-                  </option>
-                ))}
-              </select>
-            </div>
-          )}
+        <div>
+          <label className="mb-1 block text-sm text-gray-400">Team Name</label>
+          <input
+            type="text"
+            className={inputClass}
+            placeholder="e.g. Team Alpha"
+            value={form.teamName}
+            onChange={(e) => setForm({ ...form, teamName: e.target.value })}
+            required
+          />
         </div>
 
         <div className="grid grid-cols-3 gap-4">

@@ -80,13 +80,6 @@ export default function AdminPage() {
           <span className="ml-auto text-sm text-gray-400">{teams.length} teams</span>
         </div>
 
-        {/* Add / Edit Team */}
-        <TeamForm
-          editingTeam={editingTeam}
-          onSave={() => setEditingTeam(null)}
-          onCancelEdit={() => setEditingTeam(null)}
-        />
-
         {/* Teams list with edit */}
         <div className="rounded-2xl border border-gray-700 bg-gray-900 shadow-lg overflow-hidden">
           <div className="px-6 py-4 border-b border-gray-700 flex flex-wrap items-center gap-3">
@@ -154,6 +147,13 @@ export default function AdminPage() {
             </table>
           </div>
         </div>
+
+        {/* Add / Edit Team */}
+        <TeamForm
+          editingTeam={editingTeam}
+          onSave={() => setEditingTeam(null)}
+          onCancelEdit={() => setEditingTeam(null)}
+        />
 
         {/* GitHub repo submission */}
         <TeamSubmitForm />
