@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { collection, addDoc, doc, updateDoc, serverTimestamp } from "firebase/firestore";
+import { db } from "@/lib/firebase";
 
 const DOMAINS = ["IoT", "Cybersecurity", "Open Innovation", "AI/ML"];
 
@@ -12,7 +14,14 @@ export type Team = {
   round2: number;
   round3: number;
   total: number;
-  createdAt: string;
+  createdAt?: unknown;
+  githubRepo?: string;
+  commits?: number;
+  linesAdded?: number;
+  linesDeleted?: number;
+  lastCommitDate?: string;
+  contributors?: number;
+  githubLastSynced?: unknown;
 };
 
 type Props = {
@@ -48,33 +57,47 @@ export default function TeamForm({ editingTeam, onSave, onCancelEdit }: Props) {
     setError("");
     setLoading(true);
 
-    const payload = {
-      teamName: form.teamName,
-      domain: form.domain,
-      round1: form.round1 === "" ? 0 : Number(form.round1),
-      round2: form.round2 === "" ? 0 : Number(form.round2),
-      round3: form.round3 === "" ? 0 : Number(form.round3),
-    };
+    const r1 = form.round1 === "" ? 0 : Number(form.round1);
+    const r2 = form.round2 === "" ? 0 : Number(form.round2);
+    const r3 = form.round3 === "" ? 0 : Number(form.round3);
 
-    const url = editingTeam ? `/api/teams/${editingTeam.id}` : "/api/teams";
-    const method = editingTeam ? "PUT" : "POST";
-
-    const res = await fetch(url, {
-      method,
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
-
-    const data = await res.json();
-    setLoading(false);
-
-    if (!res.ok) {
-      setError(data.error || "Something went wrong");
+    if ([r1, r2, r3].some((s) => isNaN(s) || s < 0 || s > 100)) {
+      setError("Scores must be between 0 and 100");
+      setLoading(false);
       return;
     }
 
-    setForm(empty);
-    onSave();
+    const total = r1 + r2 + r3;
+
+    try {
+      if (editingTeam) {
+        await updateDoc(doc(db, "teams", editingTeam.id), {
+          teamName: form.teamName.trim(),
+          domain: form.domain,
+          round1: r1,
+          round2: r2,
+          round3: r3,
+          total,
+        });
+      } else {
+        await addDoc(collection(db, "teams"), {
+          teamName: form.teamName.trim(),
+          domain: form.domain,
+          round1: r1,
+          round2: r2,
+          round3: r3,
+          total,
+          createdAt: serverTimestamp(),
+        });
+      }
+      setForm(empty);
+      onSave();
+    } catch (e) {
+      console.error(e);
+      setError("Failed to save. Check your connection.");
+    }
+
+    setLoading(false);
   }
 
   const inputClass =

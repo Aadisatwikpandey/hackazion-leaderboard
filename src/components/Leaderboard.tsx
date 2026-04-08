@@ -48,13 +48,18 @@ export default function Leaderboard({ teams, onEdit }: Props) {
               <th className="px-4 py-3 text-center">R2</th>
               <th className="px-4 py-3 text-center">R3</th>
               <th className="px-4 py-3 text-center font-semibold text-white">Total</th>
+              <th className="px-4 py-3 text-center">Commits</th>
+              <th className="px-4 py-3 text-center">+Lines</th>
+              <th className="px-4 py-3 text-center">-Lines</th>
+              <th className="px-4 py-3 text-center">Contributors</th>
+              <th className="px-4 py-3 text-center">Last Commit</th>
               <th className="px-4 py-3 w-16"></th>
             </tr>
           </thead>
           <tbody>
             {sorted.length === 0 && (
               <tr>
-                <td colSpan={8} className="px-4 py-8 text-center text-gray-500">
+                <td colSpan={13} className="px-4 py-8 text-center text-gray-500">
                   No teams yet. Add one above.
                 </td>
               </tr>
@@ -67,7 +72,12 @@ export default function Leaderboard({ teams, onEdit }: Props) {
                 <td className="px-4 py-3 text-center font-medium text-gray-400">
                   {i < 3 ? rankBadges[i] : i + 1}
                 </td>
-                <td className="px-4 py-3 font-medium text-white">{team.teamName}</td>
+                <td className="px-4 py-3 font-medium text-white">
+                  {team.teamName}
+                  {team.githubRepo && (
+                    <span className="ml-2 text-xs text-gray-500">⬡ {team.githubRepo}</span>
+                  )}
+                </td>
                 <td className="px-4 py-3">
                   <span className="rounded-full bg-indigo-500/20 px-2 py-0.5 text-xs text-indigo-300">
                     {team.domain}
@@ -77,6 +87,15 @@ export default function Leaderboard({ teams, onEdit }: Props) {
                 <td className="px-4 py-3 text-center">{team.round2}</td>
                 <td className="px-4 py-3 text-center">{team.round3}</td>
                 <td className="px-4 py-3 text-center font-bold text-indigo-400">{team.total}</td>
+                <td className="px-4 py-3 text-center text-gray-300">{team.commits ?? "—"}</td>
+                <td className="px-4 py-3 text-center text-green-400">{team.linesAdded != null ? `+${team.linesAdded}` : "—"}</td>
+                <td className="px-4 py-3 text-center text-red-400">{team.linesDeleted != null ? `-${team.linesDeleted}` : "—"}</td>
+                <td className="px-4 py-3 text-center text-gray-300">{team.contributors ?? "—"}</td>
+                <td className="px-4 py-3 text-center text-gray-400 text-xs">
+                  {team.lastCommitDate
+                    ? new Date(team.lastCommitDate).toLocaleDateString("en-IN", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })
+                    : "—"}
+                </td>
                 <td className="px-4 py-3 text-center">
                   <button
                     onClick={() => onEdit(team)}
