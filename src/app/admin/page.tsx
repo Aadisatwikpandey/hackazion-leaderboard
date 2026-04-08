@@ -10,10 +10,9 @@ import TeamSubmitForm from "@/components/TeamSubmitForm";
 export default function AdminPage() {
   const [teams, setTeams] = useState<Team[]>([]);
   const [editingTeam, setEditingTeam] = useState<Team | null>(null);
+  const [domain, setDomain] = useState("All");
   const [syncing, setSyncing] = useState(false);
   const [syncMsg, setSyncMsg] = useState("");
-  const [seeding, setSeeding] = useState(false);
-  const [seedMsg, setSeedMsg] = useState("");
   const router = useRouter();
 
   useEffect(() => {
@@ -39,15 +38,6 @@ export default function AdminPage() {
     setTimeout(() => setSyncMsg(""), 4000);
   }
 
-  async function seedTeams() {
-    setSeeding(true);
-    setSeedMsg("");
-    const res = await fetch("/api/seed", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ force: true }) });
-    const data = await res.json();
-    setSeeding(false);
-    setSeedMsg(data.message || "Done");
-    setTimeout(() => setSeedMsg(""), 4000);
-  }
 
   return (
     <main className="min-h-screen bg-gray-950 px-4 py-10 text-white">
@@ -80,22 +70,13 @@ export default function AdminPage() {
         <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-gray-700 bg-gray-900 p-4">
           <span className="text-sm text-gray-400">Quick Actions:</span>
           <button
-            onClick={seedTeams}
-            disabled={seeding}
-            className="rounded-lg bg-gray-700 px-4 py-1.5 text-xs font-medium text-white hover:bg-gray-600 disabled:opacity-50"
-          >
-            {seeding ? "Seeding…" : "Seed All Teams"}
-          </button>
-          <button
             onClick={syncGitHub}
             disabled={syncing}
             className="rounded-lg bg-gray-700 px-4 py-1.5 text-xs font-medium text-white hover:bg-gray-600 disabled:opacity-50"
           >
             {syncing ? "Syncing…" : "↻ Sync GitHub Stats"}
           </button>
-          {(syncMsg || seedMsg) && (
-            <span className="text-xs text-green-400">{syncMsg || seedMsg}</span>
-          )}
+          {syncMsg && <span className="text-xs text-green-400">{syncMsg}</span>}
           <span className="ml-auto text-sm text-gray-400">{teams.length} teams</span>
         </div>
 
@@ -108,8 +89,21 @@ export default function AdminPage() {
 
         {/* Teams list with edit */}
         <div className="rounded-2xl border border-gray-700 bg-gray-900 shadow-lg overflow-hidden">
-          <div className="px-6 py-4 border-b border-gray-700">
-            <h2 className="text-base font-semibold text-white">All Teams</h2>
+          <div className="px-6 py-4 border-b border-gray-700 flex flex-wrap items-center gap-3">
+            <h2 className="text-base font-semibold text-white mr-2">All Teams</h2>
+            {["All", "IoT", "Cybersecurity", "AI/ML", "Open Innovation"].map((d) => (
+              <button
+                key={d}
+                onClick={() => setDomain(d)}
+                className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
+                  domain === d
+                    ? "bg-indigo-600 text-white"
+                    : "border border-gray-600 text-gray-400 hover:border-gray-400 hover:text-white"
+                }`}
+              >
+                {d}
+              </button>
+            ))}
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
@@ -133,7 +127,7 @@ export default function AdminPage() {
                     </td>
                   </tr>
                 )}
-                {teams.map((team) => (
+                {(domain === "All" ? teams : teams.filter((t) => t.domain === domain)).map((team) => (
                   <tr key={team.id} className="border-b border-gray-800 text-gray-200 hover:bg-gray-800/50">
                     <td className="px-4 py-3 font-medium text-white">{team.teamName}</td>
                     <td className="px-4 py-3">
